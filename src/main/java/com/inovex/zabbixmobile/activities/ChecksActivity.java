@@ -244,7 +244,7 @@ public class ChecksActivity extends BaseHostGroupSpinnerActivity implements
 	@Override
 	public void onHostsLoaded() {
 		Host h = selectInitialHost(false);
-		mZabbixDataService.loadApplicationsByHostId(h.getId(), this, false);
+		mZabbixDataService.loadApplicationsByHostId(h.getHostId(), this, false);
 		mHostListFragment.dismissLoadingSpinner();
 	}
 

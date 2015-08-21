@@ -1222,10 +1222,11 @@ public class ZabbixRemoteAPI {
 		JsonObjectReader hostReader;
 		while ((hostReader = jsonReader.next()) != null) {
 			Host h = new Host();
+			h.setServer(databaseHelper.getCurrentServer());
 			while (hostReader.nextValueToken()) {
 				String propName = hostReader.getCurrentName();
-				if (propName.equals(Host.COLUMN_ID)) {
-					h.setId(Long.parseLong(hostReader.getText()));
+				if (propName.equals(Host.COLUMN_HOSTID)) {
+					h.setHostId(Long.parseLong(hostReader.getText()));
 					// if (firstHostId == -1) {
 					// firstHostId = (Long) h.get(HostData.COLUMN_HOSTID);
 					// }
@@ -1284,8 +1285,6 @@ public class ZabbixRemoteAPI {
 			// hosts in the local database may not be empty; hence we prevent
 			// multiple database operations on the hosts table
 			synchronized (databaseHelper.getDao(Host.class)) {
-				databaseHelper.clearHosts();
-				databaseHelper.clearHostGroups();
 				JsonArrayOrObjectReader hosts = _queryStream(
 						"host.get",
 						new JSONObject()
@@ -1403,7 +1402,7 @@ public class ZabbixRemoteAPI {
 					&& (applications == null || applications.isEmpty())) {
 				// If no application has been found for this particular event,
 				// we create an "other" application
-				long otherId = item.getHost().getId() * (-1);
+				long otherId = item.getHost().getHostId() * (-1);
 				Application other = databaseHelper.getApplicationById(otherId);
 				if (other == null) {
 					other = new Application();

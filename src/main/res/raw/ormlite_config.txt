@@ -1,5 +1,5 @@
 #
-# generated on 2015/08/21 03:29:01
+# generated on 2015/08/21 04:31:56
 #
 # --table-start--
 dataClass=com.inovex.zabbixmobile.model.Application
@@ -216,8 +216,13 @@ tableName=hosts
 # --table-fields-start--
 # --field-start--
 fieldName=id
+columnName=id
+generatedId=true
+# --field-end--
+# --field-start--
+fieldName=hostId
 columnName=hostid
-id=true
+uniqueIndexName=host_server_idx
 # --field-end--
 # --field-start--
 fieldName=name
@@ -226,6 +231,13 @@ columnName=host
 # --field-start--
 fieldName=status
 columnName=status
+# --field-end--
+# --field-start--
+fieldName=server
+columnName=server
+foreign=true
+uniqueIndexName=host_server_idx
+foreignAutoRefresh=true
 # --field-end--
 # --table-fields-end--
 # --table-end--

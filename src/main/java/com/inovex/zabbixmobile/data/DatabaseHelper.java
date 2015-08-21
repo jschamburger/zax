@@ -78,7 +78,7 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
 	private static final String DATABASE_NAME = "zabbixmobile2.db";
 	// any time you make changes to your database objects, you may have to
 	// increase the database version
-	private static final int DATABASE_VERSION = 14;
+	private static final int DATABASE_VERSION = 17;
 	private static final String TAG = DatabaseHelper.class.getSimpleName();
 	private DatabaseConnection mThreadConnection;
 	private final Context mContext;
@@ -286,7 +286,14 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
 		try {
 			Dao<Host, Long> hostDao = getDao(Host.class);
 			for(Host host : hosts) {
-				hostDao.refresh(host);
+				Map<String, Object> fieldValues = new HashMap<>();
+				fieldValues.put(Host.COLUMN_HOSTID, host.getHostId());
+				fieldValues.put(Host.COLUMN_SERVER, getCurrentServer());
+				List<Host> refreshedHosts = hostDao.queryForFieldValues(fieldValues);
+				if(refreshedHosts != null && !refreshedHosts.isEmpty()) {
+					host.setId(refreshedHosts.get(0).getId());
+					hostDao.refresh(host);
+				}
 			}
 		} catch (SQLException e) {
 			handleException(new FatalException(Type.INTERNAL_ERROR, e));
@@ -305,6 +312,7 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
 			Dao<Host, Long> hostDao = getDao(Host.class);
 			Dao<HostHostGroupRelation, Long> groupRelationDao = getDao(HostHostGroupRelation.class);
 			QueryBuilder<Host, Long> hostQuery = hostDao.queryBuilder();
+			hostQuery.where().eq(Host.COLUMN_SERVER, getCurrentServer());
 
 			if (hostGroupId != HostGroup.GROUP_ID_ALL) {
 				QueryBuilder<HostHostGroupRelation, Long> groupQuery = groupRelationDao
@@ -335,7 +343,14 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
 		try {
 			Dao<Host, Long> hostDao = getDao(Host.class);
 			synchronized (hostDao) {
-				return hostDao.queryForId(hostId);
+				Map<String, Object> fieldValues = new HashMap<>();
+				fieldValues.put(Host.COLUMN_HOSTID, hostId);
+				fieldValues.put(Host.COLUMN_SERVER, getCurrentServer());
+				List<Host> hosts = hostDao.queryForFieldValues(fieldValues);
+				if(hosts == null || hosts.isEmpty()) {
+					return null;
+				}
+				return hosts.get(0);
 			}
 		} catch (SQLException e) {
 			handleException(new FatalException(Type.INTERNAL_ERROR, e));
@@ -1068,30 +1083,6 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
 	public void clearTriggers() {
 		try {
 			clearTable(Trigger.class);
-		} catch (SQLException e) {
-			handleException(new FatalException(Type.INTERNAL_ERROR, e));
-		}
-	}
-
-	/**
-	 * Removes all hosts from the database.
-	 *
-	 */
-	public void clearHosts() {
-		try {
-			clearTable(Host.class);
-		} catch (SQLException e) {
-			handleException(new FatalException(Type.INTERNAL_ERROR, e));
-		}
-	}
-
-	/**
-	 * Removes all host groups from the database.
-	 *
-	 */
-	public void clearHostGroups() {
-		try {
-			clearTable(HostGroup.class);
 		} catch (SQLException e) {
 			handleException(new FatalException(Type.INTERNAL_ERROR, e));
 		}

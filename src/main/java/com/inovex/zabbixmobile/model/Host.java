@@ -25,9 +25,15 @@ public class Host implements Comparable<Host> {
 	
 	public static final int STATUS_MONITORED = 0;
 
-	public static final String COLUMN_ID = "hostid";
-	@DatabaseField(id = true, columnName = COLUMN_ID)
+	private static final String INDEX_HOST_SERVER = "host_server_idx";
+
+	public static final String COLUMN_ID = "id";
+	@DatabaseField(generatedId = true, columnName = COLUMN_ID)
 	long id;
+
+	public static final String COLUMN_HOSTID = "hostid";
+	@DatabaseField(uniqueIndexName = INDEX_HOST_SERVER, columnName = COLUMN_HOSTID)
+	long hostId;
 
 	public static final String COLUMN_HOST = "host";
 	@DatabaseField(columnName = COLUMN_HOST)
@@ -37,15 +43,14 @@ public class Host implements Comparable<Host> {
 	@DatabaseField(columnName = COLUMN_STATUS)
 	int status;
 
+	public static final String COLUMN_SERVER = "server";
+	@DatabaseField(uniqueIndexName = INDEX_HOST_SERVER, foreign = true, foreignAutoRefresh = true, columnName = COLUMN_SERVER)
+	ZabbixServer server;
+
 	HostGroup group;
 
 	public Host() {
 
-	}
-
-	public Host(long id, String name) {
-		this.id = id;
-		this.name = name;
 	}
 
 	public long getId() {
@@ -54,6 +59,14 @@ public class Host implements Comparable<Host> {
 
 	public void setId(long id) {
 		this.id = id;
+	}
+
+	public long getHostId() {
+		return hostId;
+	}
+
+	public void setHostId(long hostId) {
+		this.hostId = hostId;
 	}
 
 	public String getName() {
@@ -80,18 +93,26 @@ public class Host implements Comparable<Host> {
 		this.status = status;
 	}
 
+	public ZabbixServer getServer() {
+		return server;
+	}
+
+	public void setServer(ZabbixServer server) {
+		this.server = server;
+	}
+
 	@Override
 	public int compareTo(Host another) {
-		if (id == another.getId())
+		if (hostId == another.getHostId() && server.equals(another.getServer()))
 			return 0;
-		if (id > another.getId())
+		if (hostId > another.getHostId())
 			return 1;
 		return -1;
 	}
 
 	@Override
 	public String toString() {
-		return getId() + ": " + getName();
+		return getHostId() + ": " + getName();
 	}
 
 }

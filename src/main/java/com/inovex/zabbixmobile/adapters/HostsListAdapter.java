@@ -39,7 +39,6 @@ public class HostsListAdapter extends BaseServiceAdapter<Host> {
 	 * Constructor.
 	 * 
 	 * @param service
-	 * @param textViewResourceId
 	 */
 	public HostsListAdapter(ZabbixDataService service) {
 		super(service);
@@ -67,7 +66,7 @@ public class HostsListAdapter extends BaseServiceAdapter<Host> {
 	public long getItemId(int position) {
 		Host item = getItem(position);
 		if (item != null)
-			return item.getId();
+			return item.getHostId();
 		return 0;
 	}
 

@@ -17,11 +17,6 @@ This file is part of ZAX.
 
 package com.inovex.zabbixmobile.data;
 
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
@@ -39,6 +34,11 @@ import com.inovex.zabbixmobile.model.TriggerHostGroupRelation;
 import com.inovex.zabbixmobile.model.TriggerSeverity;
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.support.ConnectionSource;
+
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 /**
  * Mock database helper which creates a database containing static data.
@@ -190,14 +190,6 @@ public class MockDatabaseHelper extends DatabaseHelper {
 
 	@Override
 	public void clearTriggers() {
-	}
-
-	@Override
-	public void clearHosts() {
-	}
-
-	@Override
-	public void clearHostGroups() {
 	}
 
 	@Override
