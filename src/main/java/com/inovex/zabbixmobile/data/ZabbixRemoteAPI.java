@@ -705,10 +705,11 @@ public class ZabbixRemoteAPI {
 		int i = 0;
 		while ((application = jsonReader.next()) != null) {
 			Application app = new Application();
+			app.setServer(databaseHelper.getCurrentServer());
 			while (application.nextValueToken()) {
 				String propName = application.getCurrentName();
 				if (propName.equals(Application.COLUMN_APPLICATIONID)) {
-					app.setId(Long.parseLong(application.getText()));
+					app.setApplicationId(Long.parseLong(application.getText()));
 				} else if (propName.equals(Application.COLUMN_NAME)) {
 					app.setName(application.getText());
 				} else if (propName.equals(Application.COLUMN_HOSTID)) {
@@ -740,7 +741,7 @@ public class ZabbixRemoteAPI {
 					}
 					if (hosts.size() > 1) {
 						Log.w(TAG, "More than one host found for application "
-								+ app.getId() + ": " + app.getName());
+								+ app.getApplicationId() + ": " + app.getName());
 					}
 				} else {
 					application.nextProperty();
@@ -1407,9 +1408,10 @@ public class ZabbixRemoteAPI {
 				if (other == null) {
 					other = new Application();
 					other.setHost(item.getHost());
-					other.setId(otherId);
+					other.setApplicationId(otherId);
 					other.setName(mContext.getResources().getString(
 							R.string.other));
+					other.setServer(databaseHelper.getCurrentServer());
 					ArrayList<Application> apps = new ArrayList<Application>();
 					apps.add(other);
 					databaseHelper.insertApplications(apps);

@@ -23,22 +23,30 @@ import com.j256.ormlite.table.DatabaseTable;
 @DatabaseTable(tableName = "applications")
 public class Application implements Comparable<Application> {
 
-	public static final String COLUMN_APPLICATIONID = "applicationid";
-	@DatabaseField(id = true, columnName = COLUMN_APPLICATIONID)
+	private static final String INDEX_APPLICATION_SERVER = "application_server_idx";
+
+	public static final String COLUMN_ID = "id";
+	@DatabaseField(generatedId = true, columnName = COLUMN_ID)
 	private long id;
+	public static final String COLUMN_APPLICATIONID = "applicationid";
+	@DatabaseField(uniqueIndexName = INDEX_APPLICATION_SERVER, columnName = COLUMN_APPLICATIONID)
+	private long applicationId;
 	public static final String COLUMN_HOSTID = "hostid";
 	@DatabaseField(columnName = COLUMN_HOSTID, foreign = true, foreignAutoRefresh = true, index = true)
 	Host host;
 	public static final String COLUMN_NAME = "name";
 	@DatabaseField(columnName = COLUMN_NAME)
 	private String name;
+	public static final String COLUMN_SERVER = "server";
+	@DatabaseField(uniqueIndexName = INDEX_APPLICATION_SERVER, columnName = COLUMN_SERVER, foreign = true, foreignAutoRefresh = true)
+	private ZabbixServer server;
 
 	public Application() {
 
 	}
 
-	public long getId() {
-		return id;
+	public long getApplicationId() {
+		return applicationId;
 	}
 
 	public Host getHost() {
@@ -49,8 +57,8 @@ public class Application implements Comparable<Application> {
 		return name;
 	}
 
-	public void setId(long id) {
-		this.id = id;
+	public void setApplicationId(long applicationId) {
+		this.applicationId = applicationId;
 	}
 
 	public void setHost(Host host) {
@@ -61,14 +69,21 @@ public class Application implements Comparable<Application> {
 		this.name = name;
 	}
 
+	public ZabbixServer getServer() {
+		return server;
+	}
+
+	public void setServer(ZabbixServer server) {
+		this.server = server;
+	}
+
 	@Override
 	public String toString() {
-		return getId() + " " + getName() + "(Host: " + host.getName() + ")";
+		return getApplicationId() + " " + getName() + "(Host: " + host.getName() + ") [Server: " + server.getName() +"]";
 	}
 
 	@Override
 	public int compareTo(Application another) {
 		return name.compareTo(another.getName());
 	}
-
 }

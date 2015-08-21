@@ -21,8 +21,10 @@ import java.sql.SQLException;
 import java.sql.Savepoint;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import android.content.Context;
@@ -76,7 +78,7 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
 	private static final String DATABASE_NAME = "zabbixmobile2.db";
 	// any time you make changes to your database objects, you may have to
 	// increase the database version
-	private static final int DATABASE_VERSION = 10;
+	private static final int DATABASE_VERSION = 11;
 	private static final String TAG = DatabaseHelper.class.getSimpleName();
 	private DatabaseConnection mThreadConnection;
 	private final Context mContext;
@@ -252,7 +254,8 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
 	public List<HostGroup> getHostGroups(long zabbixServerId) {
 		try {
 			Dao<HostGroup, Long> hostGroupDao = getDao(HostGroup.class);
-			return hostGroupDao.queryBuilder().where().eq(HostGroup.COLUMN_ZABBIXSERVER_ID, zabbixServerId).query();
+			return hostGroupDao.queryBuilder().where().eq(HostGroup.COLUMN_ZABBIXSERVER_ID,
+                    zabbixServerId).query();
 		} catch (SQLException e) {
 			handleException(new FatalException(Type.INTERNAL_ERROR, e));
 		}
@@ -375,23 +378,6 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
 	}
 
 	/**
-	 * Queries all applications for a specified host from the database.
-	 *
-	 * @param host
-	 *
-	 * @return list of applications
-	 */
-	public List<Application> getApplicationsByHost(Host host) {
-		try {
-			Dao<Application, Long> appDao = getDao(Application.class);
-			return appDao.queryForEq(Application.COLUMN_HOSTID, host);
-		} catch (SQLException e) {
-			handleException(new FatalException(Type.INTERNAL_ERROR, e));
-		}
-		return new ArrayList<Application>();
-	}
-
-	/**
 	 * Queries all applications for a specified host ID from the database.
 	 *
 	 * @param hostId
@@ -401,7 +387,10 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
 	public List<Application> getApplicationsByHostId(long hostId) {
 		try {
 			Dao<Application, Long> appDao = getDao(Application.class);
-			return appDao.queryForEq(Application.COLUMN_HOSTID, hostId);
+			Map<String, Object> fieldValues = new HashMap<>();
+			fieldValues.put(Application.COLUMN_HOSTID, hostId);
+			fieldValues.put(Application.COLUMN_SERVER, getCurrentServer());
+			return appDao.queryForFieldValues(fieldValues);
 		} catch (SQLException e) {
 			handleException(new FatalException(Type.INTERNAL_ERROR, e));
 		}
@@ -418,7 +407,15 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
 	public Application getApplicationById(long id) {
 		try {
 			Dao<Application, Long> appDao = getDao(Application.class);
-			return appDao.queryForId(id);
+			Map<String, Object> fieldValues = new HashMap<>();
+			fieldValues.put(Application.COLUMN_APPLICATIONID, id);
+			fieldValues.put(Application.COLUMN_SERVER, getCurrentServer());
+			List<Application> applications = appDao
+					.queryForFieldValues(fieldValues);
+			if(applications == null || applications.isEmpty()) {
+				return null;
+			}
+			return applications.get(0);
 		} catch (SQLException e) {
 			handleException(new FatalException(Type.INTERNAL_ERROR, e));
 		}
@@ -445,7 +442,7 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
 					.queryBuilder();
 
 			applicationQuery.where().eq(Application.COLUMN_APPLICATIONID,
-					applicationId);
+					applicationId).and().eq(Application.COLUMN_SERVER, getCurrentServer());
 			relationQuery.join(applicationQuery);
 
 			itemQuery.join(relationQuery);
@@ -509,7 +506,8 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
 	public List<Screen> getScreens(long zabbixServerId) {
 		try {
 			Dao<Screen, Long> screenDao = getDao(Screen.class);
-			return screenDao.queryBuilder().where().eq(Screen.COLUMN_ZABBIXSERVER_ID, zabbixServerId).query();
+			return screenDao.queryBuilder().where().eq(Screen.COLUMN_ZABBIXSERVER_ID,
+                    zabbixServerId).query();
 		} catch (SQLException e) {
 			handleException(new FatalException(Type.INTERNAL_ERROR, e));
 		}
@@ -1166,7 +1164,8 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
 			Dao<Application, Long> appDao = getDao(Application.class);
 			DeleteBuilder<Application, Long> deleteBuilder = appDao
 					.deleteBuilder();
-			deleteBuilder.where().eq(Application.COLUMN_HOSTID, hostId);
+			deleteBuilder.where().eq(Application.COLUMN_HOSTID, hostId).and().
+                    eq(Application.COLUMN_SERVER, getCurrentServer());
 			deleteBuilder.delete();
 
 		} catch (SQLException e) {
@@ -1436,5 +1435,16 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
 		} catch (SQLException e) {
 			handleException(new FatalException(Type.INTERNAL_ERROR, e));
 		}
+	}
+
+	public ZabbixServer getCurrentServer() {
+		try {
+			// delete zabbix server
+			Dao<ZabbixServer, Long> dao = getDao(ZabbixServer.class);
+			return dao.queryForId(ZaxPreferences.getInstance(mContext).getServerSelection());
+		} catch (SQLException e) {
+			handleException(new FatalException(Type.INTERNAL_ERROR, e));
+		}
+		return null;
 	}
 }
