@@ -25,20 +25,24 @@ public class HostGroup implements Comparable<HostGroup> {
 
 	public static final long GROUP_ID_ALL = -1;
 
-	/** Host ID */
+	private static final String INDEX_GROUP_SERVER = "group_server_idx";
+
+	public static final String COLUMN_ID = "id";
+	@DatabaseField(generatedId = true, columnName = COLUMN_ID)
+	private long id;
+
 	public static final String COLUMN_GROUPID = "groupid";
-	@DatabaseField(id = true, columnName = COLUMN_GROUPID)
+	@DatabaseField(uniqueIndexName = INDEX_GROUP_SERVER, columnName = COLUMN_GROUPID)
 	private long groupId;
 
-	/** Host name */
 	public static final String COLUMN_NAME = "name";
 	@DatabaseField(columnName = COLUMN_NAME)
 	private String name;
 
 	/** zabbix server */
-	public static final String COLUMN_ZABBIXSERVER_ID = "zabbixserverid";
-	@DatabaseField(columnName = COLUMN_ZABBIXSERVER_ID)
-	private Long zabbixServerId;
+	public static final String COLUMN_SERVER = "server";
+	@DatabaseField(uniqueIndexName = INDEX_GROUP_SERVER, foreign = true, foreignAutoRefresh = true, columnName = COLUMN_SERVER)
+	private ZabbixServer server;
 
 	public HostGroup() {
 
@@ -65,6 +69,14 @@ public class HostGroup implements Comparable<HostGroup> {
 		this.name = name;
 	}
 
+	public ZabbixServer getServer() {
+		return server;
+	}
+
+	public void setServer(ZabbixServer server) {
+		this.server = server;
+	}
+
 	@Override
 	public String toString() {
 		return groupId + " " + name;
@@ -77,14 +89,6 @@ public class HostGroup implements Comparable<HostGroup> {
 		if (groupId < another.getGroupId())
 			return -1;
 		return 0;
-	}
-
-	public Long getZabbixServerId() {
-		return zabbixServerId;
-	}
-
-	public void setZabbixServerId(Long zabbixServerId) {
-		this.zabbixServerId = zabbixServerId;
 	}
 
 }

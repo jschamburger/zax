@@ -78,7 +78,7 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
 	private static final String DATABASE_NAME = "zabbixmobile2.db";
 	// any time you make changes to your database objects, you may have to
 	// increase the database version
-	private static final int DATABASE_VERSION = 17;
+	private static final int DATABASE_VERSION = 18;
 	private static final String TAG = DatabaseHelper.class.getSimpleName();
 	private DatabaseConnection mThreadConnection;
 	private final Context mContext;
@@ -251,15 +251,36 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
 	 *
 	 * @return list of all host groups
 	 */
-	public List<HostGroup> getHostGroups(long zabbixServerId) {
+	public List<HostGroup> getHostGroups() {
 		try {
 			Dao<HostGroup, Long> hostGroupDao = getDao(HostGroup.class);
-			return hostGroupDao.queryBuilder().where().eq(HostGroup.COLUMN_ZABBIXSERVER_ID,
-                    zabbixServerId).query();
+			return hostGroupDao.queryBuilder().where().eq(HostGroup.COLUMN_SERVER,
+                    getCurrentServer()).query();
 		} catch (SQLException e) {
 			handleException(new FatalException(Type.INTERNAL_ERROR, e));
 		}
 		return new ArrayList<HostGroup>();
+	}
+
+	/**
+	 * Returns the host group with the given ID for the current server.
+	 *
+	 * @param groupId the host group's ID
+	 * @return the host group; null if not found
+	 */
+	public HostGroup getHostGroupById(long groupId) {
+		try {
+			Dao<HostGroup, Long> hostGroupDao = getDao(HostGroup.class);
+			List<HostGroup> hostGroups = hostGroupDao.queryBuilder().where().eq(HostGroup.COLUMN_SERVER,
+					getCurrentServer()).and()
+					.eq(HostGroup.COLUMN_GROUPID, groupId).query();
+			if(hostGroups != null && !hostGroups.isEmpty()) {
+				return hostGroups.get(0);
+			}
+		} catch (SQLException e) {
+			handleException(new FatalException(Type.INTERNAL_ERROR, e));
+		}
+		return null;
 	}
 
 	/**
@@ -310,16 +331,20 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
 	public List<Host> getHostsByHostGroup(long hostGroupId) {
 		try {
 			Dao<Host, Long> hostDao = getDao(Host.class);
-			Dao<HostHostGroupRelation, Long> groupRelationDao = getDao(HostHostGroupRelation.class);
 			QueryBuilder<Host, Long> hostQuery = hostDao.queryBuilder();
 			hostQuery.where().eq(Host.COLUMN_SERVER, getCurrentServer());
 
+			Dao<HostGroup, Long> hostGroupDao = getDao(HostGroup.class);
+			QueryBuilder<HostGroup, Long> hostGroupQuery = hostGroupDao.queryBuilder();
+			hostGroupQuery.where().eq(HostGroup.COLUMN_SERVER, getCurrentServer()).and()
+					.eq(HostGroup.COLUMN_GROUPID, hostGroupId);
+			Dao<HostHostGroupRelation, Long> groupRelationDao = getDao(HostHostGroupRelation.class);
+
 			if (hostGroupId != HostGroup.GROUP_ID_ALL) {
-				QueryBuilder<HostHostGroupRelation, Long> groupQuery = groupRelationDao
+				QueryBuilder<HostHostGroupRelation, Long> relationQuery = groupRelationDao
 						.queryBuilder();
-				groupQuery.where().eq(HostHostGroupRelation.COLUMN_GROUPID,
-						hostGroupId);
-				hostQuery.join(groupQuery);
+				relationQuery.join(hostGroupQuery);
+				hostQuery.join(relationQuery);
 			}
 			return hostQuery.query();
 		} catch (SQLException e) {
@@ -696,7 +721,7 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
 			try {
 
 				for (HostGroup group : hostGroups) {
-					hostGroupDao.createIfNotExists(group);
+					hostGroupDao.createOrUpdate(group);
 				}
 
 			} finally {
@@ -802,6 +827,7 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
 						// this might throw an exception if the relation exists
 						// already (however, with a different primary key) ->
 						// ignore
+						e.printStackTrace();
 					}
 				}
 

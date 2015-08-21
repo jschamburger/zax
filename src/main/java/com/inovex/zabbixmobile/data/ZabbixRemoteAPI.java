@@ -1166,7 +1166,7 @@ public class ZabbixRemoteAPI {
 		JsonObjectReader hostReader;
 		while ((hostReader = jsonReader.next()) != null) {
 			HostGroup h = new HostGroup();
-			h.setZabbixServerId(mCurrentZabbixServerId);
+			h.setServer(databaseHelper.getCurrentServer());
 			while (hostReader.nextValueToken()) {
 				String propName = hostReader.getCurrentName();
 				if (propName.equals(HostGroup.COLUMN_GROUPID)) {
@@ -1260,9 +1260,17 @@ public class ZabbixRemoteAPI {
 			Log.d(TAG, "hosts inserted.");
 		}
 
-		if (insertHosts && !hostHostGroupCollection.isEmpty())
+		if (insertHosts && !hostHostGroupCollection.isEmpty()) {
+			for(HostHostGroupRelation relation : hostHostGroupCollection) {
+				if(relation.getGroup() != null) {
+					HostGroup groupFromDb = databaseHelper
+							.getHostGroupById(relation.getGroup().getGroupId());
+					relation.setGroup(groupFromDb);
+				}
+			}
 			databaseHelper
 					.insertHostHostgroupRelations(hostHostGroupCollection);
+		}
 
 		return hostCollection;
 	}

@@ -500,7 +500,7 @@ public class ZabbixDataService extends Service {
 					// even if the api call is not successful, we can still use
 					// the cached events
 				} finally {
-					hostGroups = mDatabaseHelper.getHostGroups(mCurrentZabbixServerId);
+					hostGroups = mDatabaseHelper.getHostGroups();
 				}
 			}
 
@@ -817,7 +817,7 @@ public class ZabbixDataService extends Service {
 					// even if the api call is not successful, we can still use
 					// the cached events
 				} finally {
-					hostGroups = mDatabaseHelper.getHostGroups(mCurrentZabbixServerId);
+					hostGroups = mDatabaseHelper.getHostGroups();
 				}
 			}
 
