@@ -53,6 +53,7 @@ public class Cache {
 
 	public static final String COLUMN_TYPE = "type";
 	public static final String COLUMN_ITEM_ID = "item_id";
+	public static final String COLUMN_SERVER = "server";
 	private static final String INDEX_CACHE = "cache_idx";
 
 	@DatabaseField(generatedId = true)
@@ -61,6 +62,8 @@ public class Cache {
 	private CacheDataType type;
 	@DatabaseField(uniqueIndexName = INDEX_CACHE, columnName = COLUMN_ITEM_ID, canBeNull = true)
 	private Long itemId;
+	@DatabaseField(uniqueIndexName = INDEX_CACHE, foreign = true, foreignAutoRefresh = true, columnName = COLUMN_SERVER)
+	private ZabbixServer server;
 	@DatabaseField
 	private long expireTime;
 
@@ -68,11 +71,12 @@ public class Cache {
 
 	}
 
-	public Cache(CacheDataType type, Long itemId) {
+	public Cache(CacheDataType type, Long itemId, ZabbixServer server) {
 		this.type = type;
 		this.expireTime = System.currentTimeMillis() + type.getLifeTime()
 				* 1000;
 		this.itemId = itemId;
+		this.server = server;
 	}
 
 	public CacheDataType getType() {
@@ -91,4 +95,11 @@ public class Cache {
 		this.expireTime = expireTime;
 	}
 
+	public ZabbixServer getServer() {
+		return server;
+	}
+
+	public void setServer(ZabbixServer server) {
+		this.server = server;
+	}
 }

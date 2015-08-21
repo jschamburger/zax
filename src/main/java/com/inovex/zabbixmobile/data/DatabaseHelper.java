@@ -78,7 +78,7 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
 	private static final String DATABASE_NAME = "zabbixmobile2.db";
 	// any time you make changes to your database objects, you may have to
 	// increase the database version
-	private static final int DATABASE_VERSION = 11;
+	private static final int DATABASE_VERSION = 14;
 	private static final String TAG = DatabaseHelper.class.getSimpleName();
 	private DatabaseConnection mThreadConnection;
 	private final Context mContext;
@@ -1239,9 +1239,9 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
 			Dao<Cache, CacheDataType> cacheDao = getDao(Cache.class);
 			synchronized (cacheDao) {
 				if (isCached(type, itemId)) {
-					cacheDao.update(new Cache(type, itemId));
+					cacheDao.update(new Cache(type, itemId, getCurrentServer()));
 				} else {
-					cacheDao.create(new Cache(type, itemId));
+					cacheDao.create(new Cache(type, itemId, getCurrentServer()));
 				}
 			}
 		} catch (SQLException e) {
@@ -1269,6 +1269,7 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
 				QueryBuilder<Cache, CacheDataType> query = cacheDao
 						.queryBuilder();
 				query.where().eq(Cache.COLUMN_TYPE, type).and()
+						.eq(Cache.COLUMN_SERVER, getCurrentServer()).and()
 						.eq(Cache.COLUMN_ITEM_ID, itemId);
 				c = query.queryForFirst();
 				if (c != null) {
@@ -1302,7 +1303,9 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
 
 			Cache c;
 			QueryBuilder<Cache, CacheDataType> query = cacheDao.queryBuilder();
+			ZabbixServer currentServer = getCurrentServer();
 			query.where().eq(Cache.COLUMN_TYPE, type).and()
+					.eq(Cache.COLUMN_SERVER, currentServer).and()
 					.eq(Cache.COLUMN_ITEM_ID, itemId);
 			c = query.queryForFirst();
 			if (c != null && c.getExpireTime() < System.currentTimeMillis()) {
@@ -1310,10 +1313,12 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
 				c = null;
 			}
 			if (c == null) {
-				Log.d(TAG, type + " (id: " + itemId + ") was not cached.");
+				Log.d(TAG, type + " on server " + currentServer.getName() + " (id: " + itemId + ") " +
+						"was not cached.");
 				return false;
 			}
-			Log.d(TAG, type + " (id: " + itemId + ") was cached.");
+			Log.d(TAG, type + " on server " + currentServer.getName() + " (id: " + itemId + ") was " +
+					"cached.");
 			return true;
 		} catch (SQLException e) {
 			handleException(new FatalException(Type.INTERNAL_ERROR, e));
