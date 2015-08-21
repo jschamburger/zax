@@ -145,9 +145,9 @@ public abstract class BaseHostGroupSpinnerActivity extends BaseActivity
 	}
 
 	@Override
-	public void refreshData() {
+	public void refreshData(boolean clearCache) {
 		mFirstCall = true;
-		super.refreshData();
+		super.refreshData(clearCache);
 	}
 
 	protected void loadAdapterContent(boolean hostGroupChanged) {

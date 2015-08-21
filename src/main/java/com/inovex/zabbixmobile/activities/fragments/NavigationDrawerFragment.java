@@ -135,7 +135,8 @@ public class NavigationDrawerFragment extends BaseServiceConnectedFragment
 				.setServerSelection(id);
 		Log.d(TAG, "selectedid="+id);
 
-//		mActivity.refreshData();
+		// do not clear the cache (cached data for servers may stay to make transition quicker)
+		mActivity.refreshData(false);
 	}
 
 	protected void selectServerItem(long zabbixserverId) {

@@ -172,13 +172,17 @@ public class ZabbixDataService extends Service {
 	}
 
 	/**
-	 * Clears all data in the database and in the adapters.
+	 * Clears all data in the database for the current server and clears all adapters.
+	 *
+	 * @param clearCache whether or not the cache (in the database) should be cleared
 	 */
-	public void clearAllData() {
+	public void clearDataAndRelogin(boolean clearCache) {
 
 		Log.d(TAG, "clearing all data");
 
-		mDatabaseHelper.clearAllData();
+		if(clearCache) {
+            mDatabaseHelper.clearAllData();
+        }
 
 		mPreferences.refresh(getApplicationContext());
 		mCurrentZabbixServerId = mPreferences.getServerSelection();
@@ -603,7 +607,7 @@ public class ZabbixDataService extends Service {
 					for (TriggerSeverity severity : TriggerSeverity.values()) {
 						events.put(severity, mDatabaseHelper
 								.getEventsBySeverityAndHostGroupId(severity,
-										hostGroupId));
+                                        hostGroupId));
 					}
 				}
 			}
@@ -684,7 +688,7 @@ public class ZabbixDataService extends Service {
 					for (TriggerSeverity severity : TriggerSeverity.values()) {
 						triggers.put(severity, mDatabaseHelper
 								.getProblemsBySeverityAndHostGroupId(severity,
-										hostGroupId));
+                                        hostGroupId));
 					}
 				}
 			}

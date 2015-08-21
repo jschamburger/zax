@@ -206,7 +206,7 @@ public abstract class BaseActivity extends SherlockFragmentActivity implements
 		if (mPreferencesClosed) {
 			if (mPreferencesChangedServer == true && mZabbixDataService != null) {
 				mZabbixDataService.performZabbixLogout();
-				mZabbixDataService.clearAllData();
+				mZabbixDataService.clearDataAndRelogin(false);
 				mZabbixDataService.initConnection();
 				// update widget because server data has changed
 				Intent intent = new Intent(getApplicationContext(),
@@ -441,7 +441,8 @@ public abstract class BaseActivity extends SherlockFragmentActivity implements
 			startActivityForResult(intent, REQUEST_CODE_PREFERENCES);
 			return true;
 		case R.id.menuitem_clear:
-			refreshData();
+			// clear cache to have a complete data refresh when the button is clicked
+			refreshData(true);
 			return true;
 		case R.id.menuitem_info:
 			Intent i = new Intent(getApplicationContext(), InfoAcitivtiy.class);
@@ -453,9 +454,11 @@ public abstract class BaseActivity extends SherlockFragmentActivity implements
 
 	/**
 	 * Clears all cached data and performs a fresh login.
+	 *
+	 * @param clearCache whether or not the cache should be cleared
 	 */
-	public void refreshData() {
-		mZabbixDataService.clearAllData();
+	public void refreshData(boolean clearCache) {
+		mZabbixDataService.clearDataAndRelogin(clearCache);
 		mZabbixDataService.performZabbixLogout();
 		// re-login and load host groups
 		mZabbixDataService.performZabbixLogin(this);
